@@ -18,15 +18,25 @@ def reset_activities():
 
 
 def test_root_redirects_to_static_index():
-    response = client.get("/", follow_redirects=False)
+    # Arrange
+    path = "/"
 
+    # Act
+    response = client.get(path, follow_redirects=False)
+
+    # Assert
     assert response.status_code == 307
     assert response.headers["location"] == "/static/index.html"
 
 
 def test_get_activities_returns_activity_catalog():
-    response = client.get("/activities")
+    # Arrange
+    path = "/activities"
 
+    # Act
+    response = client.get(path)
+
+    # Assert
     assert response.status_code == 200
     payload = response.json()
     assert "Chess Club" in payload
@@ -34,23 +44,35 @@ def test_get_activities_returns_activity_catalog():
 
 
 def test_signup_for_activity_adds_participant():
+    # Arrange
+    activity_name = "Chess Club"
+    email = "newstudent@mergington.edu"
+
+    # Act
     response = client.post(
-        "/activities/Chess Club/signup",
-        params={"email": "newstudent@mergington.edu"},
+        f"/activities/{activity_name}/signup",
+        params={"email": email},
     )
 
+    # Assert
     assert response.status_code == 200
     assert response.json() == {
-        "message": "Signed up newstudent@mergington.edu for Chess Club"
+        "message": f"Signed up {email} for {activity_name}"
     }
-    assert "newstudent@mergington.edu" in activities["Chess Club"]["participants"]
+    assert email in activities[activity_name]["participants"]
 
 
 def test_signup_for_unknown_activity_returns_404():
+    # Arrange
+    activity_name = "Unknown Activity"
+    email = "student@mergington.edu"
+
+    # Act
     response = client.post(
-        "/activities/Unknown Activity/signup",
-        params={"email": "student@mergington.edu"},
+        f"/activities/{activity_name}/signup",
+        params={"email": email},
     )
 
+    # Assert
     assert response.status_code == 404
     assert response.json() == {"detail": "Activity not found"}
