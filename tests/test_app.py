@@ -20,13 +20,14 @@ def reset_activities():
 def test_root_redirects_to_static_index():
     # Arrange
     path = "/"
+    expected_location = "/static/index.html"
 
     # Act
     response = client.get(path, follow_redirects=False)
 
     # Assert
     assert response.status_code == 307
-    assert response.headers["location"] == "/static/index.html"
+    assert response.headers["location"] == expected_location
 
 
 def test_get_activities_returns_activity_catalog():
@@ -39,6 +40,7 @@ def test_get_activities_returns_activity_catalog():
     # Assert
     assert response.status_code == 200
     payload = response.json()
+    assert response.headers["content-type"].startswith("application/json")
     assert "Chess Club" in payload
     assert payload["Chess Club"]["max_participants"] == 12
 
@@ -47,6 +49,7 @@ def test_signup_for_activity_adds_participant():
     # Arrange
     activity_name = "Chess Club"
     email = "newstudent@mergington.edu"
+    expected_message = {"message": f"Signed up {email} for {activity_name}"}
 
     # Act
     response = client.post(
@@ -56,9 +59,7 @@ def test_signup_for_activity_adds_participant():
 
     # Assert
     assert response.status_code == 200
-    assert response.json() == {
-        "message": f"Signed up {email} for {activity_name}"
-    }
+    assert response.json() == expected_message
     assert email in activities[activity_name]["participants"]
 
 
@@ -66,6 +67,7 @@ def test_signup_for_unknown_activity_returns_404():
     # Arrange
     activity_name = "Unknown Activity"
     email = "student@mergington.edu"
+    expected_error = {"detail": "Activity not found"}
 
     # Act
     response = client.post(
@@ -75,4 +77,4 @@ def test_signup_for_unknown_activity_returns_404():
 
     # Assert
     assert response.status_code == 404
-    assert response.json() == {"detail": "Activity not found"}
+    assert response.json() == expected_error
